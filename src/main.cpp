@@ -1,4 +1,5 @@
 #include "chip8.h"
+#include "gfx.h"
 
 #include <iostream>
 #include <string>
