@@ -127,31 +127,31 @@ void cpu::op_8(uint16_t const opcode) {
     switch (opcode & 0x000F) {
         case 0x0000: {
             break;
-        },
+        }
         case 0x0001: {
             break;
-        },
+        }
         case 0x0002: {
             break;
-        },
+        }
         case 0x0003: {
             break;
-        },
+        }
         case 0x0004: {
             break;
-        },
+        }
         case 0x0005: {
             break;
-        },
+        }
         case 0x0006: {
             break;
-        },
+        }
         case 0x0007: {
             break;
-        },
+        }
         case 0x000E: {
             break;
-        },
+        }
     }
 
 }
