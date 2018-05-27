@@ -14,7 +14,7 @@ private:
     cpu _cpu;
 
 public:
-    chip8() = default;
+    chip8();
 
     void load_game_from_file(char const *path, uint16_t pos = MEM_PROG_START);
 
@@ -23,8 +23,6 @@ public:
     void write_to_mem(uint16_t const address, uint8_t value);
 
     void tick();
-
-
 };
 
 #endif //CHIP8_CHIP8_H
