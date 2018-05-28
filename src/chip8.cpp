@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-chip8::chip8() : _cpu(_ram, _gfx) {}
+chip8::chip8() : _cpu(_ram, _gfx, _keypad) {}
 
 void chip8::load_game_from_file(char const *path, uint16_t pos) {
 
@@ -29,7 +29,7 @@ void chip8::load_game_from_file(char const *path, uint16_t pos) {
 
 
 void chip8::tick() {
-    auto const pc = _cpu.fetch();
+    auto const pc = _cpu.prog_counter();
     uint16_t const opcode = _ram.read(pc) << 8 | _ram.read(pc + 1);
 
     auto const opmask = _cpu.decode(opcode);
@@ -37,3 +37,6 @@ void chip8::tick() {
     _cpu.execute(opmask, opcode);
 }
 
+bool chip8::pixel_at(uint8_t const x, uint8_t const y) {
+    return _gfx.pixel_at(x, y);
+}

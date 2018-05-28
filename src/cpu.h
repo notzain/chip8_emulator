@@ -7,6 +7,7 @@
 
 #include "ram.h"
 #include "gfx.h"
+#include "keypad.h"
 
 #include <array>
 #include <map>
@@ -15,6 +16,7 @@ class cpu {
 private:
     ram &_ram;
     gfx &_gfx;
+    keypad &_keypad;
 
     /*
      * Chip8 has 15 general purpose registers: V0, V1 .. VE (15)
@@ -24,17 +26,20 @@ private:
     std::array<uint8_t, 16> _v_reg{};
 
     std::array<uint16_t, 16> _stack{};
-    uint8_t _stack_idx{};
+    uint8_t _stack_idx{0};
 
     /*
      * The I register stores one memory address.
      */
-    uint16_t _i_reg{};
+    uint16_t _i_reg{0};
 
     /*
      * The program counter register holds the address of the next opcode to fetch and execute.
      */
     uint16_t _pc_reg = 0x200;
+
+    uint8_t _delay_timer {0};
+    uint8_t _sound_timer {0};
 
     using opcode_func = void (cpu::*)(uint16_t const);
     static const std::map<uint16_t, opcode_func> _instruction_set;
@@ -72,9 +77,9 @@ private:
     void op_F(uint16_t const opcode);
 
 public:
-    cpu(ram &ram, gfx &gfx);
+    cpu(ram &ram, gfx &gfx, keypad &keypad);
 
-    inline uint16_t fetch() const { return _pc_reg; }
+    inline uint16_t prog_counter() const { return _pc_reg; }
 
     uint16_t decode(uint16_t const opcode) const;
 

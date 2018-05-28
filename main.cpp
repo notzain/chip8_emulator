@@ -4,7 +4,15 @@
 #include <iostream>
 #include <string>
 
+#include <SFML/Graphics.hpp>
+
 int main(int argc, char **argv) {
+
+    constexpr int resolution = 10;
+
+    sf::RenderWindow window(sf::VideoMode(64 * resolution, 32 * resolution), "SFML works!");
+    window.setFramerateLimit(15);
+
     std::string const game_file = [&]() -> std::string {
         if (argc > 1) {
             return argv[1];
@@ -16,7 +24,28 @@ int main(int argc, char **argv) {
 
     chip8.load_game_from_file(game_file.c_str());
 
-    for (int i = 0; i < 4096; ++i) {
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
         chip8.tick();
+
+        window.clear();
+        sf::RectangleShape pixel({resolution, resolution});
+        for (int x = 0; x < 64; x++) {
+            for (int y = 0; y < 32; ++y) {
+                if (chip8.pixel_at(x, y)) {
+                    pixel.setPosition(x * resolution, y * resolution);
+                    window.draw(pixel);
+                }
+            }
+        }
+
+        window.display();
+
     }
 }

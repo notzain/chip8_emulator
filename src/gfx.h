@@ -15,6 +15,8 @@ private:
 public:
     gfx() = default;
 
+    void clear();
+
     bool pixel_at(uint8_t const x, uint8_t const y) const;
 
     void pixel_set(uint8_t const x, uint8_t const y, bool is_set);

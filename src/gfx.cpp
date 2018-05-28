@@ -11,3 +11,7 @@ bool gfx::pixel_at(uint8_t const x, uint8_t const y) const {
 void gfx::pixel_set(uint8_t const x, uint8_t const y, bool is_set) {
     _screen[x][y] = is_set;
 }
+
+void gfx::clear() {
+    _screen.fill({});
+}

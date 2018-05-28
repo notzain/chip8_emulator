@@ -27,7 +27,7 @@ const std::map<uint16_t, cpu::opcode_func> cpu::_instruction_set = {
         {0xF000, &cpu::op_F},
 };
 
-cpu::cpu(ram &ram, gfx &gfx) : _ram(ram), _gfx(gfx) {}
+cpu::cpu(ram &ram, gfx &gfx, keypad &keypad) : _ram(ram), _gfx(gfx), _keypad(keypad) {}
 
 uint16_t cpu::decode(uint16_t const opcode) const {
     return (opcode & 0xF000);
@@ -43,11 +43,16 @@ void cpu::execute(uint16_t const opmask, uint16_t const opcode) {
                   << static_cast<int>(opmask) << " "
                   << static_cast<int>(opcode) << '\n';
     }
+
+    if (_delay_timer > 0) --_delay_timer;
+    if (_sound_timer > 0) --_sound_timer;
 }
 
 void cpu::op_0(uint16_t const opcode) {
+
     // 00E0	Clear the screen
     if (opcode == 0x00E0) {
+        _gfx.clear();
         std::cout << "Clear screen. \n";
         _pc_reg += 2;
     }
@@ -85,7 +90,7 @@ void cpu::op_2(uint16_t const opcode) {
 void cpu::op_3(uint16_t const opcode) {
     // 3XNN	Skip the following instruction if the value of register VX equals NN
     uint8_t const v_idx = (opcode & 0x0F00) >> 8;
-    uint8_t const compare_val = (opcode && 0x00FF);
+    uint8_t const compare_val = (opcode & 0x00FF);
 
     if (_v_reg[v_idx] == compare_val) {
         std::cout << "Skip following instruction. \n";
@@ -98,7 +103,7 @@ void cpu::op_3(uint16_t const opcode) {
 void cpu::op_4(uint16_t const opcode) {
     // 4XNN	Skip the following instruction if the value of register VX is not equal to NN
     uint8_t const v_idx = (opcode & 0x0F00) >> 8;
-    uint8_t const compare_val = (opcode && 0x00FF);
+    uint8_t const compare_val = (opcode & 0x00FF);
 
     if (_v_reg[v_idx] != compare_val) {
         std::cout << "Skip following instruction. \n";
@@ -149,52 +154,116 @@ void cpu::op_7(uint16_t const opcode) {
 }
 
 void cpu::op_8(uint16_t const opcode) {
+
+    // 8XY0
     uint8_t const v_idx_x = (opcode & 0x0F00) >> 8;
     uint8_t const v_idx_y = (opcode & 0x00F0) >> 4;
 
     switch (opcode & 0x000F) {
         // 8XY0	Store the value of register VY in register VX
         case 0x0000: {
+            _v_reg[v_idx_x] = _v_reg[v_idx_y];
+
             break;
         }
             // 8XY1	Set VX to VX OR VY
         case 0x0001: {
+            uint8_t const vx = _v_reg[v_idx_x];
+            uint8_t const vy = _v_reg[v_idx_y];
+
+            _v_reg[v_idx_x] = vx | vy;
             break;
         }
             // 8XY2	Set VX to VX AND VY
         case 0x0002: {
+            uint8_t const vx = _v_reg[v_idx_x];
+            uint8_t const vy = _v_reg[v_idx_y];
+
+            _v_reg[v_idx_x] = vx & vy;
             break;
         }
             // 8XY3	Set VX to VX XOR VY
         case 0x0003: {
+            uint8_t const vx = _v_reg[v_idx_x];
+            uint8_t const vy = _v_reg[v_idx_y];
+
+            _v_reg[v_idx_x] = vx ^ vy;
             break;
         }
             // 8XY4	Add the value of register VY to register VX
             //      Set VF to 01 if a carry occurs
             //      Set VF to 00 if a carry does not occur
         case 0x0004: {
+            uint8_t const vx = _v_reg[v_idx_x];
+            uint8_t const vy = _v_reg[v_idx_y];
+
+            // If (UINT8_MAX - vy) is bigger than vx,
+            // we know that the result of vx + vy will be bigger than UINT8_MAX. Set carry
+            if (vx > (UINT8_MAX - vy)) {
+                _v_reg[0x000F] = 0x01;
+            } else {
+                _v_reg[0x000F] = 0x00;
+            }
+
+            _v_reg[v_idx_x] = vx + vy;
+
             break;
         }
             // 8XY5	Subtract the value of register VY from register VX
             //      Set VF to 00 if a borrow occurs
             //      Set VF to 01 if a borrow does not occur
         case 0x0005: {
+            uint8_t const vx = _v_reg[v_idx_x];
+            uint8_t const vy = _v_reg[v_idx_y];
+
+            // If vx is bigger than vy, then the result of vx - vy will always be positive. No carry
+            if (vx > vy) {
+                _v_reg[0x000F] = 0x00;
+            } else {
+                _v_reg[0x000F] = 0x01;
+            }
+
+            _v_reg[v_idx_x] = vx - vy;
+
             break;
         }
             // 8XY6	Store the value of register VY shifted right one bit in register VX
             //      Set register VF to the least significant bit prior to the shift
         case 0x0006: {
+            uint8_t const vy = _v_reg[v_idx_y];
+
+            _v_reg[0x000F] = vy & 0x01;
+
+            _v_reg[v_idx_x] = vy >> 1;
+
             break;
         }
             // 8XY7	Set register VX to the value of VY minus VX
             //      Set VF to 00 if a borrow occurs
             //      Set VF to 01 if a borrow does not occur
         case 0x0007: {
+            uint8_t const vx = _v_reg[v_idx_x];
+            uint8_t const vy = _v_reg[v_idx_y];
+
+            // If vx is bigger than vy, then the result of vx - vy will always be positive. No carry
+            if (vy > vx) {
+                _v_reg[0x000F] = 0x00;
+            } else {
+                _v_reg[0x000F] = 0x01;
+            }
+
+            _v_reg[v_idx_x] = vy - vx;
+
             break;
         }
             // 8XYE	Store the value of register VY shifted left one bit in register VX
             //      Set register VF to the most significant bit prior to the shift
         case 0x000E: {
+            uint8_t const vy = _v_reg[v_idx_y];
+
+            _v_reg[0x000F] = vy >> 7;
+
+            _v_reg[v_idx_x] = vy << 1;
             break;
         }
         default: {
@@ -265,11 +334,14 @@ void cpu::op_D(uint16_t const opcode) {
      * The corresponding graphic on the screen will be eight pixels wide and N pixels high.
      */
 
-    uint8_t const pos_x = _v_reg[(opcode & 0x0F00) >> 8];
-    assert(pos_x >= 0x00 && pos_x <= 0x3F);
+    uint8_t const v_idx_x = (opcode & 0x0F00) >> 8;
+    uint8_t const v_idx_y = (opcode & 0x00F0) >> 4;
 
-    uint8_t const pos_y = _v_reg[(opcode & 0x00F0) >> 4];
-    assert(pos_y >= 0x00 && pos_y <= 0x1F);
+    uint8_t const pos_x = _v_reg[v_idx_x];
+    assert(pos_x >= 0 && pos_x < 64);
+
+    uint8_t const pos_y = _v_reg[v_idx_y];
+    assert(pos_y >= 0 && pos_y < 32);
 
     uint8_t const height = (opcode & 0x000F);
 
@@ -315,13 +387,11 @@ void cpu::op_E(uint16_t const opcode) {
         case 0x009E: {
             std::cout << "Key in V register (X): " << std::hex << static_cast<int>(key) << '\n';
 
-            /*
-            if (_keys[key] != 0) {
-                //skip pc
+            if (_keypad.is_pressed(key)) {
+                _pc_reg += 4;
             } else {
-
+                _pc_reg += 2;
             }
-             */
 
             break;
         }
@@ -330,13 +400,11 @@ void cpu::op_E(uint16_t const opcode) {
         case 0x00A1: {
             std::cout << "Key in V register (X): " << std::hex << static_cast<int>(key) << '\n';
 
-            /*
-            if (_keys[key] != 0) {
-                //skip pc
+            if (!_keypad.is_pressed(key)) {
+                _pc_reg += 4;
             } else {
-
+                _pc_reg += 2;
             }
-             */
             break;
         }
         default: {
@@ -349,16 +417,30 @@ void cpu::op_F(uint16_t const opcode) {
     switch (opcode & 0x00FF) {
         // FX07	Store the current value of the delay timer in register VX
         case 0x0007: {
-            uint8_t const v_idx = (opcode & 0x0F00);
+            uint8_t const v_idx = (opcode & 0x0F00) >> 8;
 
-            _v_reg[v_idx] /* = delay_timer */;
+            _v_reg[v_idx] = _delay_timer;
+
+            _pc_reg += 2;
 
             break;
         }
             // FX0A	Wait for a keypress and store the result in register VX
-        case 0x000A: {
             // Note: Blocking operation
+        case 0x000A: {
+            uint8_t const v_idx = (opcode & 0x0F00) >> 8;
 
+            bool is_key_pressed = false;
+            uint8_t key;
+
+            while (!is_key_pressed) {
+                for (key = 0; key < 16 && !is_key_pressed; ++key) {
+                    is_key_pressed = _keypad.is_pressed(key);
+                }
+            }
+            _v_reg[v_idx] = key;
+
+            _pc_reg += 2;
 
             break;
         }
@@ -367,12 +449,20 @@ void cpu::op_F(uint16_t const opcode) {
             uint8_t const v_idx = (opcode & 0x0F00) >> 8;
             uint8_t const value = _v_reg[v_idx];
 
+            _delay_timer = value;
+
+            _pc_reg += 2;
+
             break;
         }
             // FX18	Set the sound timer to the value of register VX
         case 0x0018: {
             uint8_t const v_idx = (opcode & 0x0F00) >> 8;
             uint8_t const value = _v_reg[v_idx];
+
+            _sound_timer = value;
+
+            _pc_reg += 2;
 
             break;
         }
@@ -383,6 +473,8 @@ void cpu::op_F(uint16_t const opcode) {
 
             _i_reg = value;
 
+            _pc_reg += 2;
+
             break;
         }
             // FX29	Set I to the memory address of the sprite data corresponding to the hexadecimal digit stored in register VX
@@ -391,6 +483,8 @@ void cpu::op_F(uint16_t const opcode) {
             uint8_t const value = _v_reg[v_idx];
 
             _i_reg = value * 5; // Fontset is 4x5
+
+            _pc_reg += 2;
 
             break;
         }
@@ -405,16 +499,36 @@ void cpu::op_F(uint16_t const opcode) {
             _ram.write(_i_reg + 1, (v_x / 10) % 10);
             _ram.write(_i_reg + 2, (v_x % 10) % 10);
 
+            _pc_reg += 2;
+
             break;
         }
             // FX55	Store the values of registers V0 to VX inclusive in memory starting at address I
             //      I is set to I + X + 1 after operation
         case 0x0055: {
+            uint8_t const v_idx_end = (opcode & 0x0F00) >> 8;
+            assert(v_idx_end >= 0 && v_idx_end < 8);
+
+            for (uint8_t i = 0; i < v_idx_end; ++i) {
+                _ram.write(_i_reg++, _v_reg[i]);
+            }
+
+            _pc_reg += 2;
+
             break;
         }
             // FX65	Fill registers V0 to VX inclusive with the values stored in memory starting at address I
             //      I is set to I + X + 1 after operation
         case 0x0065: {
+            uint8_t const v_idx_end = (opcode & 0x0F00) >> 8;
+            assert(v_idx_end >= 0 && v_idx_end < 8);
+
+            for (uint8_t i = 0; i < v_idx_end; ++i) {
+                _v_reg[i] = _ram.read(_i_reg++);
+            }
+
+            _pc_reg += 2;
+
             break;
         }
         default: {
