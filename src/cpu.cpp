@@ -43,80 +43,109 @@ void cpu::execute(uint16_t const opmask, uint16_t const opcode) {
                   << static_cast<int>(opmask) << " "
                   << static_cast<int>(opcode) << '\n';
     }
-
-    _pc_reg += 2;
 }
 
 void cpu::op_0(uint16_t const opcode) {
+    // 00E0	Clear the screen
     if (opcode == 0x00E0) {
         std::cout << "Clear screen. \n";
-        return;
-    } else if (opcode == 0x00EE) {
-        std::cout << "Return from subroutine. \n";
-        return;
+        _pc_reg += 2;
     }
-
-    uint16_t const op_masked = (opcode & 0x0FFF);
-    std::cout << "Exec ML subroutine: " << std::hex << static_cast<int>(op_masked) << '\n';
+        // 00EE	Return from a subroutine
+    else if (opcode == 0x00EE) {
+        std::cout << "Return from subroutine. \n";
+        _pc_reg = _stack[--_stack_idx];
+        _pc_reg += 2;
+    }
+        // 0NNN	Execute machine language subroutine at address NNN
+    else {
+        uint16_t const address = (opcode & 0x0FFF);
+        std::cout << "Exec ML subroutine: " << std::hex << static_cast<int>(address) << '\n';
+    }
 }
 
 void cpu::op_1(uint16_t const opcode) {
-    uint16_t const op_masked = (opcode & 0x0FFF);
-    std::cout << "Jump to address: " << std::hex << static_cast<int>(op_masked) << '\n';
+    // 1NNN	Jump to address NNN
+    uint16_t const address = (opcode & 0x0FFF);
+    _pc_reg = address;
+
+    std::cout << "Jump to address: " << std::hex << static_cast<int>(address) << '\n';
 }
 
 void cpu::op_2(uint16_t const opcode) {
-    uint16_t const op_masked = (opcode & 0x0FFF);
-    std::cout << "Exec at address: " << std::hex << static_cast<int>(op_masked) << '\n';
+    // 2NNN	Execute subroutine starting at address NNN
+    uint16_t const address = (opcode & 0x0FFF);
+
+    _stack[_stack_idx++] = _pc_reg;
+
+    _pc_reg = address;
+    std::cout << "Exec at address: " << std::hex << static_cast<int>(address) << '\n';
 }
 
 void cpu::op_3(uint16_t const opcode) {
+    // 3XNN	Skip the following instruction if the value of register VX equals NN
     uint8_t const v_idx = (opcode & 0x0F00) >> 8;
     uint8_t const compare_val = (opcode && 0x00FF);
 
     if (_v_reg[v_idx] == compare_val) {
         std::cout << "Skip following instruction. \n";
+        _pc_reg += 4;
     } else {
-
+        _pc_reg += 2;
     }
 }
 
 void cpu::op_4(uint16_t const opcode) {
+    // 4XNN	Skip the following instruction if the value of register VX is not equal to NN
     uint8_t const v_idx = (opcode & 0x0F00) >> 8;
     uint8_t const compare_val = (opcode && 0x00FF);
 
     if (_v_reg[v_idx] != compare_val) {
         std::cout << "Skip following instruction. \n";
+        _pc_reg += 4;
     } else {
+        _pc_reg += 2;
 
     }
 }
 
 void cpu::op_5(uint16_t const opcode) {
+    // 5XY0	Skip the following instruction if the value of register VX is equal to the value of register VY
     uint8_t const v_idx_x = (opcode & 0x0F00) >> 8;
     uint8_t const v_idx_y = (opcode & 0x00F0) >> 4;
 
     if (_v_reg[v_idx_x] == _v_reg[v_idx_y]) {
         std::cout << "Skip following instruction. \n";
+        _pc_reg += 4;
     } else {
-
+        _pc_reg += 2;
     }
 }
 
 void cpu::op_6(uint16_t const opcode) {
+    // 6XNN	Store number NN in register VX
     uint8_t const v_idx = (opcode & 0x0F00) >> 8;
-    uint8_t const val = (opcode & 0x00FF);
+    uint8_t const value = (opcode & 0x00FF);
+
+    _v_reg[v_idx] = value;
+
+    _pc_reg += 2;
 
     std::cout << "Store (NN) in (X): " << std::hex
-              << static_cast<int>(val) << " " << static_cast<int>(v_idx) << '\n';
+              << static_cast<int>(value) << " " << static_cast<int>(v_idx) << '\n';
 }
 
 void cpu::op_7(uint16_t const opcode) {
+    // 7XNN	Add the value NN to register VX
     uint8_t const v_idx = (opcode & 0x0F00) >> 8;
-    uint8_t const val = (opcode & 0x00FF);
+    uint8_t const value = (opcode & 0x00FF);
+
+    _v_reg[v_idx] += value;
+
+    _pc_reg += 2;
 
     std::cout << "Add (NN) to (X): " << std::hex
-              << static_cast<int>(val) << " " << static_cast<int>(v_idx) << '\n';
+              << static_cast<int>(value) << " " << static_cast<int>(v_idx) << '\n';
 }
 
 void cpu::op_8(uint16_t const opcode) {
@@ -124,65 +153,95 @@ void cpu::op_8(uint16_t const opcode) {
     uint8_t const v_idx_y = (opcode & 0x00F0) >> 4;
 
     switch (opcode & 0x000F) {
+        // 8XY0	Store the value of register VY in register VX
         case 0x0000: {
             break;
         }
+            // 8XY1	Set VX to VX OR VY
         case 0x0001: {
             break;
         }
+            // 8XY2	Set VX to VX AND VY
         case 0x0002: {
             break;
         }
+            // 8XY3	Set VX to VX XOR VY
         case 0x0003: {
             break;
         }
+            // 8XY4	Add the value of register VY to register VX
+            //      Set VF to 01 if a carry occurs
+            //      Set VF to 00 if a carry does not occur
         case 0x0004: {
             break;
         }
+            // 8XY5	Subtract the value of register VY from register VX
+            //      Set VF to 00 if a borrow occurs
+            //      Set VF to 01 if a borrow does not occur
         case 0x0005: {
             break;
         }
+            // 8XY6	Store the value of register VY shifted right one bit in register VX
+            //      Set register VF to the least significant bit prior to the shift
         case 0x0006: {
             break;
         }
+            // 8XY7	Set register VX to the value of VY minus VX
+            //      Set VF to 00 if a borrow occurs
+            //      Set VF to 01 if a borrow does not occur
         case 0x0007: {
             break;
         }
+            // 8XYE	Store the value of register VY shifted left one bit in register VX
+            //      Set register VF to the most significant bit prior to the shift
         case 0x000E: {
             break;
         }
+        default: {
+            break;
+        }
     }
-
+    _pc_reg += 2;
 }
 
+
 void cpu::op_9(uint16_t const opcode) {
+    // 9XY0	Skip the following instruction if the value of register VX is not equal to the value of register VY
     uint8_t const v_idx_x = (opcode & 0x0F00) >> 8;
     uint8_t const v_idx_y = (opcode & 0x00F0) >> 4;
 
     if (_v_reg[v_idx_x] != _v_reg[v_idx_y]) {
         std::cout << "Skip following instruction. \n";
+        _pc_reg += 4;
     } else {
-
+        _pc_reg += 2;
     }
 }
 
 void cpu::op_A(uint16_t const opcode) {
+    // ANNN	Store memory address NNN in register I
     _i_reg = (opcode & 0x0FFF);
+
+    _pc_reg += 2;
     std::cout << "Store (NNN) in reg I: " << std::hex << static_cast<int>(_i_reg) << '\n';
 }
 
 void cpu::op_B(uint16_t const opcode) {
+    // BNNN	Jump to address NNN + V0
     uint16_t const address = (opcode + 0x0FFF) + _v_reg[0];
+
+    _pc_reg += 2;
 
     std::cout << "Go to address: " << std::hex << static_cast<int>(address) << '\n';
 }
 
 void cpu::op_C(uint16_t const opcode) {
+    // CXNN	Set VX to a random number with a mask of NN
     uint8_t const v_idx = (opcode & 0x0F00) >> 8;
 
     uint8_t const random_val = /* should be random */ (3 & (opcode & 0x00FF));
 
-    std::cerr << "op not handled: " << std::hex << static_cast<int>(opcode) << '\n';
+    _pc_reg += 2;
 
 }
 
@@ -207,10 +266,10 @@ void cpu::op_D(uint16_t const opcode) {
      */
 
     uint8_t const pos_x = _v_reg[(opcode & 0x0F00) >> 8];
-    assert(pos_x >= 0x00 && pos_x < 0x3F);
+    assert(pos_x >= 0x00 && pos_x <= 0x3F);
 
     uint8_t const pos_y = _v_reg[(opcode & 0x00F0) >> 4];
-    assert(pos_y >= 0x00 && pos_y < 0x1F);
+    assert(pos_y >= 0x00 && pos_y <= 0x1F);
 
     uint8_t const height = (opcode & 0x000F);
 
@@ -233,24 +292,134 @@ void cpu::op_D(uint16_t const opcode) {
                     _v_reg[0x000F] = 0x01;
                 }
 
-                const auto new_pixel = current_pixel ^ 0x01;
+                const auto new_pixel = current_pixel ^0x01;
                 _gfx.pixel_set(new_x, new_y, new_pixel);
 
                 std::cout << "Setting pixel at (x, y) to (N): "
-                          << "(" << static_cast<int>(new_x) << ", " << static_cast<int>(new_y) << ") "
+                          << "(" << std::dec << static_cast<int>(new_x) << ", " << static_cast<int>(new_y) << ") "
                           << new_pixel << '\n';
             }
         }
     }
+
+    _pc_reg += 2;
 }
 
 void cpu::op_E(uint16_t const opcode) {
-    std::cerr << "op not handled: " << std::hex << static_cast<int>(opcode) << '\n';
+    uint8_t const v_idx = (opcode & 0x0F00) >> 8;
+    uint8_t const key = _v_reg[v_idx];
 
+    switch (opcode & 0x00FF) {
+        // EX9E	Skip the following instruction if the key corresponding to
+        //      the hex value currently stored in register VX is pressed
+        case 0x009E: {
+            std::cout << "Key in V register (X): " << std::hex << static_cast<int>(key) << '\n';
+
+            /*
+            if (_keys[key] != 0) {
+                //skip pc
+            } else {
+
+            }
+             */
+
+            break;
+        }
+            // EXA1	Skip the following instruction if the key corresponding to
+            //      the hex value currently stored in register VX is not pressed
+        case 0x00A1: {
+            std::cout << "Key in V register (X): " << std::hex << static_cast<int>(key) << '\n';
+
+            /*
+            if (_keys[key] != 0) {
+                //skip pc
+            } else {
+
+            }
+             */
+            break;
+        }
+        default: {
+            break;
+        }
+    }
 }
 
 void cpu::op_F(uint16_t const opcode) {
-    std::cerr << "op not handled: " << std::hex << static_cast<int>(opcode) << '\n';
+    switch (opcode & 0x00FF) {
+        // FX07	Store the current value of the delay timer in register VX
+        case 0x0007: {
+            uint8_t const v_idx = (opcode & 0x0F00);
+
+            _v_reg[v_idx] /* = delay_timer */;
+
+            break;
+        }
+            // FX0A	Wait for a keypress and store the result in register VX
+        case 0x000A: {
+            // Note: Blocking operation
+
+
+            break;
+        }
+            // FX15	Set the delay timer to the value of register VX
+        case 0x0015: {
+            uint8_t const v_idx = (opcode & 0x0F00) >> 8;
+            uint8_t const value = _v_reg[v_idx];
+
+            break;
+        }
+            // FX18	Set the sound timer to the value of register VX
+        case 0x0018: {
+            uint8_t const v_idx = (opcode & 0x0F00) >> 8;
+            uint8_t const value = _v_reg[v_idx];
+
+            break;
+        }
+            // FX1E	Add the value stored in register VX to register I
+        case 0x001E: {
+            uint8_t const v_idx = (opcode & 0x0F00) >> 8;
+            uint8_t const value = _v_reg[v_idx];
+
+            _i_reg = value;
+
+            break;
+        }
+            // FX29	Set I to the memory address of the sprite data corresponding to the hexadecimal digit stored in register VX
+        case 0x0029: {
+            uint8_t const v_idx = (opcode & 0x0F00) >> 8;
+            uint8_t const value = _v_reg[v_idx];
+
+            _i_reg = value * 5; // Fontset is 4x5
+
+            break;
+        }
+            // FX33 Stores the binary-coded decimal representation of VX,
+            //      with the most significant of three digits at the address in I,
+            //      the middle digit at I plus 1, and the least significant digit at I plus 2.
+        case 0x0033: {
+            uint8_t const v_idx = (opcode & 0x0F00) >> 8;
+            uint8_t const v_x = _v_reg[v_idx];
+
+            _ram.write(_i_reg, (v_x / 100));
+            _ram.write(_i_reg + 1, (v_x / 10) % 10);
+            _ram.write(_i_reg + 2, (v_x % 10) % 10);
+
+            break;
+        }
+            // FX55	Store the values of registers V0 to VX inclusive in memory starting at address I
+            //      I is set to I + X + 1 after operation
+        case 0x0055: {
+            break;
+        }
+            // FX65	Fill registers V0 to VX inclusive with the values stored in memory starting at address I
+            //      I is set to I + X + 1 after operation
+        case 0x0065: {
+            break;
+        }
+        default: {
+            break;
+        }
+    }
 
 }
-

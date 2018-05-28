@@ -1,5 +1,5 @@
-#include "chip8.h"
-#include "gfx.h"
+#include "src/chip8.h"
+#include "src/gfx.h"
 
 #include <iostream>
 #include <string>

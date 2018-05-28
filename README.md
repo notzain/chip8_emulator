@@ -15,5 +15,7 @@ emulators. Chip8 is a good stepping stone to get into the world of emulating.
 The following links helped greatly in understanding and implementing the Chip8:
 
 <https://en.wikipedia.org/wiki/CHIP-8>
+
 <http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/>
+
 <http://mattmik.com/files/chip8/mastering/chip8.html>

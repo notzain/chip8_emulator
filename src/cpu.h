@@ -23,6 +23,9 @@ private:
      */
     std::array<uint8_t, 16> _v_reg{};
 
+    std::array<uint16_t, 16> _stack{};
+    uint8_t _stack_idx{};
+
     /*
      * The I register stores one memory address.
      */
