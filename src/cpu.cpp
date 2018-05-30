@@ -27,7 +27,9 @@ const std::map<uint16_t, cpu::opcode_func> cpu::_instruction_set = {
         {0xF000, &cpu::op_F},
 };
 
-cpu::cpu(ram &ram, gfx &gfx, keypad &keypad) : _ram(ram), _gfx(gfx), _keypad(keypad) {}
+cpu::cpu(ram &ram, gfx &gfx, keypad &keypad) : _ram(ram), _gfx(gfx), _keypad(keypad) {
+    srand(time(NULL));
+}
 
 uint16_t cpu::decode(uint16_t const opcode) const {
     return (opcode & 0xF000);
@@ -53,6 +55,7 @@ void cpu::op_0(uint16_t const opcode) {
     // 00E0	Clear the screen
     if (opcode == 0x00E0) {
         _gfx.clear();
+        _should_draw = true;
         std::cout << "Clear screen. \n";
         _pc_reg += 2;
     }
@@ -168,26 +171,17 @@ void cpu::op_8(uint16_t const opcode) {
         }
             // 8XY1	Set VX to VX OR VY
         case 0x0001: {
-            uint8_t const vx = _v_reg[v_idx_x];
-            uint8_t const vy = _v_reg[v_idx_y];
-
-            _v_reg[v_idx_x] = vx | vy;
+            _v_reg[v_idx_x] |= _v_reg[v_idx_y];
             break;
         }
             // 8XY2	Set VX to VX AND VY
         case 0x0002: {
-            uint8_t const vx = _v_reg[v_idx_x];
-            uint8_t const vy = _v_reg[v_idx_y];
-
-            _v_reg[v_idx_x] = vx & vy;
+            _v_reg[v_idx_x] &= _v_reg[v_idx_y];
             break;
         }
             // 8XY3	Set VX to VX XOR VY
         case 0x0003: {
-            uint8_t const vx = _v_reg[v_idx_x];
-            uint8_t const vy = _v_reg[v_idx_y];
-
-            _v_reg[v_idx_x] = vx ^ vy;
+            _v_reg[v_idx_x] ^= _v_reg[v_idx_y];
             break;
         }
             // 8XY4	Add the value of register VY to register VX
@@ -197,27 +191,27 @@ void cpu::op_8(uint16_t const opcode) {
             uint8_t const vx = _v_reg[v_idx_x];
             uint8_t const vy = _v_reg[v_idx_y];
 
-            // If (UINT8_MAX - vy) is bigger than vx,
-            // we know that the result of vx + vy will be bigger than UINT8_MAX. Set carry
-            if (vx > (UINT8_MAX - vy)) {
+            uint16_t const sum = vx + vy;
+
+            if (sum > UINT8_MAX) {
                 _v_reg[0x000F] = 0x01;
             } else {
                 _v_reg[0x000F] = 0x00;
             }
 
-            _v_reg[v_idx_x] = vx + vy;
+            _v_reg[v_idx_x] = sum;
 
             break;
         }
-            // 8XY5	Subtract the value of register VY from register VX
+            // 8XY5	Subtract the value of register VY from register VX (VX - VY)
             //      Set VF to 00 if a borrow occurs
             //      Set VF to 01 if a borrow does not occur
         case 0x0005: {
             uint8_t const vx = _v_reg[v_idx_x];
             uint8_t const vy = _v_reg[v_idx_y];
 
-            // If vx is bigger than vy, then the result of vx - vy will always be positive. No carry
-            if (vx > vy) {
+            // If vy is bigger than vx, the result will be negative.
+            if (vy > vx) {
                 _v_reg[0x000F] = 0x00;
             } else {
                 _v_reg[0x000F] = 0x01;
@@ -238,7 +232,7 @@ void cpu::op_8(uint16_t const opcode) {
 
             break;
         }
-            // 8XY7	Set register VX to the value of VY minus VX
+            // 8XY7	Set register VX to the value of VY minus VX (VY - VX)
             //      Set VF to 00 if a borrow occurs
             //      Set VF to 01 if a borrow does not occur
         case 0x0007: {
@@ -246,7 +240,7 @@ void cpu::op_8(uint16_t const opcode) {
             uint8_t const vy = _v_reg[v_idx_y];
 
             // If vx is bigger than vy, then the result of vx - vy will always be positive. No carry
-            if (vy > vx) {
+            if (vx > vy) {
                 _v_reg[0x000F] = 0x00;
             } else {
                 _v_reg[0x000F] = 0x01;
@@ -308,7 +302,9 @@ void cpu::op_C(uint16_t const opcode) {
     // CXNN	Set VX to a random number with a mask of NN
     uint8_t const v_idx = (opcode & 0x0F00) >> 8;
 
-    uint8_t const random_val = /* should be random */ (3 & (opcode & 0x00FF));
+    uint8_t const random_val = (rand() & 0xFF) & (opcode & 0x00FF);
+
+    _v_reg[v_idx] = random_val;
 
     _pc_reg += 2;
 
@@ -373,6 +369,8 @@ void cpu::op_D(uint16_t const opcode) {
             }
         }
     }
+
+    _should_draw = true;
 
     _pc_reg += 2;
 }
@@ -471,7 +469,7 @@ void cpu::op_F(uint16_t const opcode) {
             uint8_t const v_idx = (opcode & 0x0F00) >> 8;
             uint8_t const value = _v_reg[v_idx];
 
-            _i_reg = value;
+            _i_reg += value;
 
             _pc_reg += 2;
 
@@ -482,7 +480,7 @@ void cpu::op_F(uint16_t const opcode) {
             uint8_t const v_idx = (opcode & 0x0F00) >> 8;
             uint8_t const value = _v_reg[v_idx];
 
-            _i_reg = value * 5; // Fontset is 4x5
+            _i_reg = value * 0x05; // Fontset is 4x5
 
             _pc_reg += 2;
 
@@ -493,11 +491,11 @@ void cpu::op_F(uint16_t const opcode) {
             //      the middle digit at I plus 1, and the least significant digit at I plus 2.
         case 0x0033: {
             uint8_t const v_idx = (opcode & 0x0F00) >> 8;
-            uint8_t const v_x = _v_reg[v_idx];
+            uint8_t const vx = _v_reg[v_idx];
 
-            _ram.write(_i_reg, (v_x / 100));
-            _ram.write(_i_reg + 1, (v_x / 10) % 10);
-            _ram.write(_i_reg + 2, (v_x % 10) % 10);
+            _ram.write(_i_reg, (vx / 100));
+            _ram.write(_i_reg + 1, (vx / 10) % 10);
+            _ram.write(_i_reg + 2, (vx % 100) % 10);
 
             _pc_reg += 2;
 
@@ -509,7 +507,7 @@ void cpu::op_F(uint16_t const opcode) {
             uint8_t const v_idx_end = (opcode & 0x0F00) >> 8;
             assert(v_idx_end >= 0 && v_idx_end < 8);
 
-            for (uint8_t i = 0; i < v_idx_end; ++i) {
+            for (uint8_t i = 0; i <= v_idx_end; ++i) {
                 _ram.write(_i_reg++, _v_reg[i]);
             }
 
@@ -523,7 +521,7 @@ void cpu::op_F(uint16_t const opcode) {
             uint8_t const v_idx_end = (opcode & 0x0F00) >> 8;
             assert(v_idx_end >= 0 && v_idx_end < 8);
 
-            for (uint8_t i = 0; i < v_idx_end; ++i) {
+            for (uint8_t i = 0; i <= v_idx_end; ++i) {
                 _v_reg[i] = _ram.read(_i_reg++);
             }
 

@@ -25,6 +25,9 @@ public:
     void tick();
 
     bool pixel_at(uint8_t const x, uint8_t const y);
+
+    bool to_draw() const;
+    void has_drawn();
 };
 
 #endif //CHIP8_CHIP8_H

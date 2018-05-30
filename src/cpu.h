@@ -41,6 +41,8 @@ private:
     uint8_t _delay_timer {0};
     uint8_t _sound_timer {0};
 
+    bool _should_draw = true;
+
     using opcode_func = void (cpu::*)(uint16_t const);
     static const std::map<uint16_t, opcode_func> _instruction_set;
 
@@ -80,6 +82,8 @@ public:
     cpu(ram &ram, gfx &gfx, keypad &keypad);
 
     inline uint16_t prog_counter() const { return _pc_reg; }
+    inline bool to_draw() const { return _should_draw; }
+    inline void has_drawn() { _should_draw = false; }
 
     uint16_t decode(uint16_t const opcode) const;
 
