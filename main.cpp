@@ -1,18 +1,23 @@
 #include "src/chip8.h"
-#include "src/gfx.h"
+#include "GameWindow.h"
+#include "KeypadWindow.h"
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
-#include <SFML/Graphics.hpp>
+std::vector<std::string> split (const std::string &str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(str);
+    while (std::getline(tokenStream, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+    return std::move(tokens);
+}
 
 int main(int argc, char **argv) {
-
-    constexpr int resolution = 10;
-
-    sf::RenderWindow window(sf::VideoMode(64 * resolution, 32 * resolution), "SFML works!");
-    window.setFramerateLimit(60);
-
     std::string const game_file = [&]() -> std::string {
         if (argc > 1) {
             return argv[1];
@@ -22,33 +27,17 @@ int main(int argc, char **argv) {
 
     chip8 chip8;
 
+    GameWindow game_window(chip8, "Chip8 - " + split(game_file, '/').back(), 10);
+    game_window.setFramerateLimit(20);
+
+    KeypadWindow keypad_window(chip8, "Chip8 - Keypad", 10);
+
     chip8.load_game_from_file(game_file.c_str());
 
-    while (window.isOpen())
-    {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
+    while (game_window.isOpen() && keypad_window.isOpen()) {
         chip8.tick();
 
-        if (chip8.to_draw()) {
-            window.clear();
-
-            sf::RectangleShape pixel({resolution, resolution});
-            for (int x = 0; x < 64; x++) {
-                for (int y = 0; y < 32; ++y) {
-                    if (chip8.pixel_at(x, y)) {
-                        pixel.setPosition(x * resolution, y * resolution);
-                        window.draw(pixel);
-                    }
-                }
-            }
-            window.display();
-            chip8.has_drawn();
-        }
-
+        game_window.update();
+        keypad_window.update();
     }
 }

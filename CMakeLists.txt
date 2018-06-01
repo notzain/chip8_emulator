@@ -4,7 +4,7 @@ project(chip8)
 set(CMAKE_CXX_STANDARD 14)
 
 set(CHIP8 src/chip8.cpp src/chip8.h src/gfx.cpp src/gfx.h src/cpu.cpp src/cpu.h src/ram.cpp src/ram.h src/keypad.cpp src/keypad.h)
-set(SRC main.cpp)
+set(SRC main.cpp GameWindow.cpp GameWindow.h KeypadWindow.cpp KeypadWindow.h)
 
 add_executable(chip8 ${SRC} ${CHIP8})
 
