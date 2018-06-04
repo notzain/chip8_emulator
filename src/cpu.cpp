@@ -386,6 +386,7 @@ void cpu::op_E(uint16_t const opcode) {
             std::cout << "Key in V register (X): " << std::hex << static_cast<int>(key) << '\n';
 
             if (_keypad.is_pressed(key)) {
+                _keypad.press(key, false);
                 _pc_reg += 4;
             } else {
                 _pc_reg += 2;
@@ -401,6 +402,7 @@ void cpu::op_E(uint16_t const opcode) {
             if (!_keypad.is_pressed(key)) {
                 _pc_reg += 4;
             } else {
+                _keypad.press(key, false);
                 _pc_reg += 2;
             }
             break;
@@ -434,6 +436,7 @@ void cpu::op_F(uint16_t const opcode) {
             while (!is_key_pressed) {
                 for (key = 0; key < 16 && !is_key_pressed; ++key) {
                     is_key_pressed = _keypad.is_pressed(key);
+                    _keypad.press(key, false);
                 }
             }
             _v_reg[v_idx] = key;

@@ -66,6 +66,11 @@ bool chip8::pixel_at(uint8_t const x, uint8_t const y) {
     return _gfx.pixel_at(x, y);
 }
 
+void chip8::press_key(uint8_t const key) {
+    _keypad.press(key, true);
+}
+
 bool chip8::to_draw() const { return _cpu.to_draw(); }
 
 void chip8::has_drawn() { _cpu.has_drawn(); }
+
