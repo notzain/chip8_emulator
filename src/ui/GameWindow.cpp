@@ -2,7 +2,8 @@
 // Created by zain on 5/31/18.
 //
 #include "GameWindow.h"
-#include "src/chip8.h"
+
+#include "../core/chip8.h"
 
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>

@@ -5,7 +5,8 @@
 #include "cpu.h"
 #include "chip8.h"
 
-#include <iostream>
+#include "fmt/printf.h"
+
 #include <cassert>
 
 const std::map<uint16_t, cpu::opcode_func> cpu::_instruction_set = {
@@ -41,9 +42,7 @@ void cpu::execute(uint16_t const opmask, uint16_t const opcode) {
     if (instr != _instruction_set.cend()) {
         (this->*(instr->second))(opcode);
     } else {
-        std::cerr << "Op not found: " << std::hex
-                  << static_cast<int>(opmask) << " "
-                  << static_cast<int>(opcode) << '\n';
+        fmt::print("Invalid hex code: opcode {:#x} | opmask {:#x}. \n", opcode, opmask);
     }
 
     if (_delay_timer > 0) --_delay_timer;
@@ -54,21 +53,19 @@ void cpu::op_0(uint16_t const opcode) {
 
     // 00E0	Clear the screen
     if (opcode == 0x00E0) {
+        fmt::print("Clear screen. \n");
         _gfx.clear();
         _should_draw = true;
-        std::cout << "Clear screen. \n";
         _pc_reg += 2;
     }
         // 00EE	Return from a subroutine
     else if (opcode == 0x00EE) {
-        std::cout << "Return from subroutine. \n";
         _pc_reg = _stack[--_stack_idx];
         _pc_reg += 2;
     }
         // 0NNN	Execute machine language subroutine at address NNN
     else {
         uint16_t const address = (opcode & 0x0FFF);
-        std::cout << "Exec ML subroutine: " << std::hex << static_cast<int>(address) << '\n';
     }
 }
 
@@ -77,7 +74,6 @@ void cpu::op_1(uint16_t const opcode) {
     uint16_t const address = (opcode & 0x0FFF);
     _pc_reg = address;
 
-    std::cout << "Jump to address: " << std::hex << static_cast<int>(address) << '\n';
 }
 
 void cpu::op_2(uint16_t const opcode) {
@@ -87,7 +83,6 @@ void cpu::op_2(uint16_t const opcode) {
     _stack[_stack_idx++] = _pc_reg;
 
     _pc_reg = address;
-    std::cout << "Exec at address: " << std::hex << static_cast<int>(address) << '\n';
 }
 
 void cpu::op_3(uint16_t const opcode) {
@@ -96,7 +91,6 @@ void cpu::op_3(uint16_t const opcode) {
     uint8_t const compare_val = (opcode & 0x00FF);
 
     if (_v_reg[v_idx] == compare_val) {
-        std::cout << "Skip following instruction. \n";
         _pc_reg += 4;
     } else {
         _pc_reg += 2;
@@ -109,7 +103,6 @@ void cpu::op_4(uint16_t const opcode) {
     uint8_t const compare_val = (opcode & 0x00FF);
 
     if (_v_reg[v_idx] != compare_val) {
-        std::cout << "Skip following instruction. \n";
         _pc_reg += 4;
     } else {
         _pc_reg += 2;
@@ -123,7 +116,6 @@ void cpu::op_5(uint16_t const opcode) {
     uint8_t const v_idx_y = (opcode & 0x00F0) >> 4;
 
     if (_v_reg[v_idx_x] == _v_reg[v_idx_y]) {
-        std::cout << "Skip following instruction. \n";
         _pc_reg += 4;
     } else {
         _pc_reg += 2;
@@ -138,9 +130,6 @@ void cpu::op_6(uint16_t const opcode) {
     _v_reg[v_idx] = value;
 
     _pc_reg += 2;
-
-    std::cout << "Store (NN) in (X): " << std::hex
-              << static_cast<int>(value) << " " << static_cast<int>(v_idx) << '\n';
 }
 
 void cpu::op_7(uint16_t const opcode) {
@@ -152,8 +141,6 @@ void cpu::op_7(uint16_t const opcode) {
 
     _pc_reg += 2;
 
-    std::cout << "Add (NN) to (X): " << std::hex
-              << static_cast<int>(value) << " " << static_cast<int>(v_idx) << '\n';
 }
 
 void cpu::op_8(uint16_t const opcode) {
@@ -267,14 +254,12 @@ void cpu::op_8(uint16_t const opcode) {
     _pc_reg += 2;
 }
 
-
 void cpu::op_9(uint16_t const opcode) {
     // 9XY0	Skip the following instruction if the value of register VX is not equal to the value of register VY
     uint8_t const v_idx_x = (opcode & 0x0F00) >> 8;
     uint8_t const v_idx_y = (opcode & 0x00F0) >> 4;
 
     if (_v_reg[v_idx_x] != _v_reg[v_idx_y]) {
-        std::cout << "Skip following instruction. \n";
         _pc_reg += 4;
     } else {
         _pc_reg += 2;
@@ -286,7 +271,6 @@ void cpu::op_A(uint16_t const opcode) {
     _i_reg = (opcode & 0x0FFF);
 
     _pc_reg += 2;
-    std::cout << "Store (NNN) in reg I: " << std::hex << static_cast<int>(_i_reg) << '\n';
 }
 
 void cpu::op_B(uint16_t const opcode) {
@@ -295,7 +279,6 @@ void cpu::op_B(uint16_t const opcode) {
 
     _pc_reg += 2;
 
-    std::cout << "Go to address: " << std::hex << static_cast<int>(address) << '\n';
 }
 
 void cpu::op_C(uint16_t const opcode) {
@@ -360,12 +343,10 @@ void cpu::op_D(uint16_t const opcode) {
                     _v_reg[0x000F] = 0x01;
                 }
 
-                const auto new_pixel = current_pixel ^0x01;
+                const auto new_pixel = current_pixel ^ 0x01;
                 _gfx.pixel_set(new_x, new_y, new_pixel);
 
-                std::cout << "Setting pixel at (x, y) to (N): "
-                          << "(" << std::dec << static_cast<int>(new_x) << ", " << static_cast<int>(new_y) << ") "
-                          << new_pixel << '\n';
+                fmt::print("Setting pixel at ({}, {}). \n", new_x, new_y );
             }
         }
     }
@@ -383,7 +364,6 @@ void cpu::op_E(uint16_t const opcode) {
         // EX9E	Skip the following instruction if the key corresponding to
         //      the hex value currently stored in register VX is pressed
         case 0x009E: {
-            std::cout << "Key in V register (X): " << std::hex << static_cast<int>(key) << '\n';
 
             if (_keypad.is_pressed(key)) {
                 _keypad.press(key, false);
@@ -397,7 +377,6 @@ void cpu::op_E(uint16_t const opcode) {
             // EXA1	Skip the following instruction if the key corresponding to
             //      the hex value currently stored in register VX is not pressed
         case 0x00A1: {
-            std::cout << "Key in V register (X): " << std::hex << static_cast<int>(key) << '\n';
 
             if (!_keypad.is_pressed(key)) {
                 _pc_reg += 4;
@@ -498,7 +477,7 @@ void cpu::op_F(uint16_t const opcode) {
 
             _ram.write(_i_reg, (vx / 100));
             _ram.write(_i_reg + 1, (vx / 10) % 10);
-            _ram.write(_i_reg + 2, (vx % 100) % 10);
+            _ram.write(_i_reg + 2, (vx % 10) % 10);
 
             _pc_reg += 2;
 
@@ -529,12 +508,10 @@ void cpu::op_F(uint16_t const opcode) {
             }
 
             _pc_reg += 2;
-
             break;
         }
         default: {
             break;
         }
     }
-
 }
