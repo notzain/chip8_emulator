@@ -11,5 +11,6 @@ set(CORE_FILES
         keypad.cpp)
 
 add_library(core ${CORE_FILES})
+
 target_link_libraries(core fmt-header-only)
 

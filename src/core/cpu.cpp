@@ -5,9 +5,11 @@
 #include "cpu.h"
 #include "chip8.h"
 
-#include "fmt/printf.h"
+#include "fmt/format.h"
+#include "util/logger.h"
 
 #include <cassert>
+
 
 const std::map<uint16_t, cpu::opcode_func> cpu::_instruction_set = {
         {0x0000, &cpu::op_0},
@@ -42,7 +44,8 @@ void cpu::execute(uint16_t const opmask, uint16_t const opcode) {
     if (instr != _instruction_set.cend()) {
         (this->*(instr->second))(opcode);
     } else {
-        fmt::print("Invalid hex code: opcode {:#x} | opmask {:#x}. \n", opcode, opmask);
+        logger::log(logger::type::ERROR,
+                fmt::format("Invalid hex code: opcode {:#x} | opmask {:#x}", opcode, opmask));
     }
 
     if (_delay_timer > 0) --_delay_timer;
@@ -53,7 +56,7 @@ void cpu::op_0(uint16_t const opcode) {
 
     // 00E0	Clear the screen
     if (opcode == 0x00E0) {
-        fmt::print("Clear screen. \n");
+//        fmt::print("Clear screen. \n");
         _gfx.clear();
         _should_draw = true;
         _pc_reg += 2;
@@ -346,7 +349,8 @@ void cpu::op_D(uint16_t const opcode) {
                 const auto new_pixel = current_pixel ^ 0x01;
                 _gfx.pixel_set(new_x, new_y, new_pixel);
 
-                fmt::print("Setting pixel at ({}, {}). \n", new_x, new_y );
+                logger::log(logger::type::ERROR,
+                    fmt::format("Setting pixel at ({}, {})", new_x, new_y));
             }
         }
     }

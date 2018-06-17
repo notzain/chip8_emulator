@@ -5,4 +5,5 @@ set(UI_FILES
         KeypadWindow.cpp)
 
 add_library(ui ${UI_FILES})
-target_link_libraries(ui PUBLIC ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} )
+
+target_link_libraries(ui PRIVATE ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} core)

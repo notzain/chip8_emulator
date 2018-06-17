@@ -11,4 +11,3 @@ include_directories(lib/fmt-5.0.0/include)
 add_subdirectory(lib/fmt-5.0.0)
 
 add_subdirectory(src)
-

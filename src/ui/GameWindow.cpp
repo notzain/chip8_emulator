@@ -3,7 +3,7 @@
 //
 #include "GameWindow.h"
 
-#include "../core/chip8.h"
+#include "core/chip8.h"
 
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
