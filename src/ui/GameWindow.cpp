@@ -5,35 +5,35 @@
 
 #include "core/chip8.h"
 
+#include "GameCanvas.h"
+#include "KeypadCanvas.h"
+
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 
-GameWindow::GameWindow(chip8 &chip, std::string window_name, int resolution)
-        : _chip8(chip),
-          _resolution(resolution),
-          sf::RenderWindow(sf::VideoMode(64 * resolution, 32 * resolution), window_name) {}
+namespace ui {
+    GameWindow::GameWindow(core::chip8 &chip8, std::string window_name, int resolution)
+            :
+            _resolution(resolution),
+            sf::RenderWindow(sf::VideoMode(5,5), window_name) {
 
-void GameWindow::update() {
-    sf::Event event{};
-    while (pollEvent(event)) {
-        if (event.type == sf::Event::Closed)
-            close();
+        _gameCanvas = std::make_unique<GameCanvas>(chip8, 0, 0);
+        _keypadCanvas = std::make_unique<KeypadCanvas>(chip8, 64, 0);
+
+        sf::Vector2u const size(_gameCanvas->size_x() * resolution + _keypadCanvas->size_x() * resolution,
+                                _gameCanvas->size_y() * resolution);
+
+        create({size.x, size.y}, window_name);
     }
 
-    if (_chip8.to_draw()) {
-        clear();
-
-        sf::RectangleShape pixel({_resolution, _resolution});
-        for (int x = 0; x < 64; x++) {
-            for (int y = 0; y < 32; ++y) {
-                if (_chip8.pixel_at(x, y)) {
-                    pixel.setPosition(x * _resolution, y * _resolution);
-                    draw(pixel);
-                }
-            }
+    void GameWindow::update() {
+        sf::Event event{};
+        while (pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                close();
         }
 
-        display();
-        _chip8.has_drawn();
+        _gameCanvas->render(*this, _resolution);
+        _keypadCanvas->render(*this, _resolution);
     }
 }

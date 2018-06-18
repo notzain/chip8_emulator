@@ -7,19 +7,20 @@
 
 #include <array>
 
-class gfx {
-private:
-    using ScreenArray = std::array<std::array<bool, 32>, 64>;
-    ScreenArray _screen{};
+namespace core {
+    class gfx {
+    private:
+        using ScreenArray = std::array<std::array<bool, 32>, 64>;
+        ScreenArray _screen{};
 
-public:
-    gfx() = default;
+    public:
+        gfx() = default;
 
-    void clear();
+        void clear();
 
-    bool pixel_at(uint8_t const x, uint8_t const y) const;
+        bool pixel_at(uint8_t const x, uint8_t const y) const;
 
-    void pixel_set(uint8_t const x, uint8_t const y, bool is_set);
-};
-
+        void pixel_set(uint8_t const x, uint8_t const y, bool is_set);
+    };
+}
 #endif //CHIP8_GFX_H

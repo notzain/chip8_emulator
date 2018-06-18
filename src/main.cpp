@@ -1,6 +1,5 @@
 #include "core/chip8.h"
 #include "ui/GameWindow.h"
-#include "ui/KeypadWindow.h"
 
 #include <iostream>
 #include <string>
@@ -24,20 +23,17 @@ int main(int argc, char **argv) {
         return "/home/zain/CLionProjects/chip8/chip8_roms/TETRIS";
     }();
 
-    chip8 chip8;
+    core::chip8 chip8;
 
-    GameWindow game_window(chip8, "Chip8 - " + split(game_file, '/').back(), 10);
-    KeypadWindow keypad_window(chip8, "Chip8 - Keypad", 10);
+    ui::GameWindow game_window(chip8, "Chip8 - " + split(game_file, '/').back(), 10);
 
     game_window.setFramerateLimit(60);
-    keypad_window.setFramerateLimit(60);
 
     chip8.load_game_from_file(game_file.c_str());
 
-    while (game_window.isOpen() && keypad_window.isOpen()) {
+    while (game_window.isOpen()) {
         chip8.tick();
 
-        keypad_window.update();
         game_window.update();
     }
 }

@@ -5,21 +5,29 @@
 #ifndef CHIP8_GAMEWINDOW_H
 #define CHIP8_GAMEWINDOW_H
 
+#include "ICanvas.h"
 #include <SFML/Graphics/RenderWindow.hpp>
+
 #include <string>
 
-class chip8;
+namespace core {
+    class chip8;
+}
 
-class GameWindow : public sf::RenderWindow {
-private:
-    chip8 &_chip8;
-    const int _resolution;
+namespace ui {
+    class GameWindow : public sf::RenderWindow {
+    private:
+        const int _resolution;
 
-public:
-    GameWindow(chip8 &chip8, std::string window_name, int resolution = 10);
+        std::unique_ptr<ICanvas> _gameCanvas = nullptr;
+        std::unique_ptr<ICanvas> _keypadCanvas = nullptr;
 
-    void update();
-};
+    public:
+        GameWindow(core::chip8 &chip8, std::string window_name, int resolution = 10);
+
+        void update();
+    };
+}
 
 
 #endif //CHIP8_GAMEWINDOW_H

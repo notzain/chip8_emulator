@@ -4,14 +4,16 @@
 
 #include "gfx.h"
 
-bool gfx::pixel_at(uint8_t const x, uint8_t const y) const {
-    return _screen[x][y];
-}
+namespace core {
+    bool gfx::pixel_at(uint8_t const x, uint8_t const y) const {
+        return _screen[x][y];
+    }
 
-void gfx::pixel_set(uint8_t const x, uint8_t const y, bool is_set) {
-    _screen[x][y] = is_set;
-}
+    void gfx::pixel_set(uint8_t const x, uint8_t const y, bool is_set) {
+        _screen[x][y] = is_set;
+    }
 
-void gfx::clear() {
-    _screen.fill({});
+    void gfx::clear() {
+        _screen.fill({});
+    }
 }

@@ -7,16 +7,17 @@
 
 #include <array>
 
-class keypad {
-private:
-    std::array<bool, 16> _keys {};
+namespace core {
+    class keypad {
+    private:
+        std::array<bool, 16> _keys{};
 
-public:
-    keypad() = default;
+    public:
+        keypad() = default;
 
-    bool is_pressed(uint8_t const key) const;
+        bool is_pressed(uint8_t const key) const;
 
-    void press(uint8_t const key, bool const state);
-};
-
+        void press(uint8_t const key, bool const state);
+    };
+}
 #endif //CHIP8_KEYPAD_H

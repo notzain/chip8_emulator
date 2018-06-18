@@ -10,27 +10,29 @@
 #include "gfx.h"
 #include "keypad.h"
 
-class chip8 {
-private:
-    cpu _cpu;
-    ram _ram;
-    gfx _gfx;
-    keypad _keypad;
+namespace core {
+    class chip8 {
+    private:
+        cpu _cpu;
+        ram _ram;
+        gfx _gfx;
+        keypad _keypad;
 
-public:
-    chip8();
+    public:
+        chip8();
 
-    void load_game_from_file(char const *path, uint16_t pos = MEM_PROG_START);
+        void load_game_from_file(char const *path, uint16_t pos = MEM_PROG_START);
 
-    void tick();
+        void tick();
 
-    bool pixel_at(uint8_t const x, uint8_t const y);
+        bool pixel_at(uint8_t const x, uint8_t const y);
 
-    void press_key(uint8_t const key);
+        void press_key(uint8_t const key);
 
-    bool to_draw() const;
+        bool to_draw() const;
 
-    void has_drawn();
-};
+        void has_drawn();
+    };
+}
 
 #endif //CHIP8_CHIP8_H

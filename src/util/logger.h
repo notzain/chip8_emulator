@@ -7,16 +7,18 @@
 
 #include <string>
 
-class logger {
-public:
-    enum class type {
-        DEBUG,
-        WARNING,
-        ERROR
-    };
+namespace util {
+    class logger {
+    public:
+        enum class type {
+            DEBUG,
+            WARNING,
+            ERROR
+        };
 
-    static void log(type type, std::string const & msg);
-};
+        static void log(type type, std::string const &msg);
+    };
+}
 
 
 #endif //CHIP8_LOGGER_H
