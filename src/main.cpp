@@ -4,11 +4,13 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <thread>
 
 std::vector<std::string> split(const std::string &str, char delimiter) {
     std::vector<std::string> tokens;
     std::string token;
     std::istringstream tokenStream(str);
+
     while (std::getline(tokenStream, token, delimiter)) {
         tokens.push_back(token);
     }
@@ -26,8 +28,6 @@ int main(int argc, char **argv) {
     core::chip8 chip8;
 
     ui::GameWindow game_window(chip8, "Chip8 - " + split(game_file, '/').back(), 10);
-
-    game_window.setFramerateLimit(60);
 
     chip8.load_game_from_file(game_file.c_str());
 

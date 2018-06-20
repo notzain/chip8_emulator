@@ -34,11 +34,12 @@ namespace ui {
     private:
         core::chip8 &_chip8;
         KeypadButton _buttons[4][4];
+        int _resolution;
 
     public:
-        KeypadCanvas(core::chip8 &chip8, const int pos_x, const int pos_y);
+        KeypadCanvas(core::chip8 &chip8, const int pos_x, const int pos_y, const int resolution);
 
-        void render(sf::RenderWindow &window, int const resolution) override;
+        void render(sf::RenderWindow &window) override;
     };
 }
 

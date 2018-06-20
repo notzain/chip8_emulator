@@ -16,17 +16,20 @@ namespace ui {
         const int _size_y;
 
     public:
-        ICanvas(int const x, int const y, int const size_x, int const size_y) : _start_x(x), _start_y(y),
-                                                                                _size_x(size_x), _size_y(size_y) {}
+        ICanvas(int const x, int const y, int const size_x, int const size_y)
+                : _start_x(x), _start_y(y),
+                  _size_x(size_x), _size_y(size_y) {}
 
         virtual  ~ICanvas() = default;
 
-        virtual void render(sf::RenderWindow &window, int const resolution) = 0;
+        virtual void render(sf::RenderWindow &window) = 0;
 
         int start_x() const { return _start_x; }
+
         int start_y() const { return _start_y; }
 
         int size_x() const { return _size_x; }
+
         int size_y() const { return _size_y; }
     };
 }

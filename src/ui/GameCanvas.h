@@ -6,6 +6,7 @@
 #define CHIP8_GAMECANVAS_H
 
 #include "ICanvas.h"
+#include <SFML/Graphics/RectangleShape.hpp>
 
 namespace core {
     class chip8;
@@ -15,12 +16,14 @@ namespace ui {
     class GameCanvas : public ICanvas {
     private:
         core::chip8 &_chip8;
-    public:
-        GameCanvas(core::chip8 &chip8, const int pos_x, const int pos_y);
+        int _resolution;
 
-        void render(sf::RenderWindow &window, int const resolution) override;
+        sf::RectangleShape _pixels[64][32]{};
+    public:
+        GameCanvas(core::chip8 &chip8, const int pos_x, const int pos_y, const int resolution);
+
+        void render(sf::RenderWindow &window) override;
     };
 }
-
 
 #endif //CHIP8_GAMECANVAS_H

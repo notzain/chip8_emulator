@@ -110,7 +110,6 @@ namespace core {
             _pc_reg += 4;
         } else {
             _pc_reg += 2;
-
         }
     }
 
