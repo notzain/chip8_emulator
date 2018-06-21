@@ -16,11 +16,16 @@ namespace ui {
     class KeypadButton : public sf::RectangleShape {
     private:
         uint8_t _hex;
+        bool _is_pressed = false;
 
     public:
         KeypadButton(uint8_t const hex) : _hex(hex) {}
 
         uint8_t hex() const { return _hex; }
+
+        void press() { _is_pressed = true; }
+        void release() { _is_pressed = false; }
+        bool is_pressed() const { return _is_pressed; }
 
         bool overlaps(sf::Vector2i const &position) const {
             return (position.x >= getPosition().x &&

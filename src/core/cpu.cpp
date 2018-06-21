@@ -370,11 +370,11 @@ namespace core {
             case 0x009E: {
 
                 if (_keypad.is_pressed(key)) {
-                    _keypad.press(key, false);
                     _pc_reg += 4;
                 } else {
                     _pc_reg += 2;
                 }
+                _keypad.press(key, false);
 
                 break;
             }
@@ -385,9 +385,10 @@ namespace core {
                 if (!_keypad.is_pressed(key)) {
                     _pc_reg += 4;
                 } else {
-                    _keypad.press(key, false);
                     _pc_reg += 2;
                 }
+                _keypad.press(key, false);
+
                 break;
             }
             default: {

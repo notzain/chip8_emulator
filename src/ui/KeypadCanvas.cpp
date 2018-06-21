@@ -2,10 +2,13 @@
 // Created by zain on 6/18/18.
 //
 
+#include "fmt/printf.h"
+
 #include "core/chip8.h"
 #include "KeypadCanvas.h"
 
 #include <SFML/Window/Mouse.hpp>
+
 
 namespace ui {
     KeypadCanvas::KeypadCanvas(core::chip8 &chip8, const int pos_x, const int pos_y, const int resolution)
@@ -17,9 +20,9 @@ namespace ui {
                        {0x03, 0x06, 0x09, 0x0B},
                        {0x0C, 0x0D, 0x0E, 0x0F}} {
 
-        const int div_size = (32 * _resolution) / 4;
-        const int pad_size = 2;
-        const int actual_size = div_size - pad_size;
+        int const div_size = (32 * _resolution) / 4;
+        int const pad_size = 2;
+        int const actual_size = div_size - pad_size;
 
         for (int row = 0; row < 4; ++row) {
             for (int column = 0; column < 4; ++column) {
@@ -34,24 +37,35 @@ namespace ui {
     }
 
     void KeypadCanvas::render(sf::RenderWindow &window) {
+        static bool last_pressed = false;
+
+        bool const mouse_pressed = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+        auto const mouse_pos = sf::Mouse::getPosition(window);
+
+        bool to_press = last_pressed != mouse_pressed;
+
         for (int row = 0; row < 4; ++row) {
             for (int column = 0; column < 4; ++column) {
                 auto &btn = _buttons[row][column];
 
-                btn.setFillColor(sf::Color::White);
-
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-                    auto const mouse_pos = sf::Mouse::getPosition(window);
-
-                    if (btn.overlaps(mouse_pos)) {
+                if (to_press) {
+                    if (btn.overlaps(mouse_pos) && !btn.is_pressed()) {
                         auto const hex = btn.hex();
+
                         _chip8.press_key(hex);
+                        btn.press();
 
                         btn.setFillColor(sf::Color::Green);
                     }
+                } else {
+                    btn.setFillColor(sf::Color::White);
+                    btn.release();
                 }
+
                 window.draw(btn);
             }
         }
+
+        to_press = mouse_pressed;
     }
 }

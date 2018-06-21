@@ -9,8 +9,11 @@
 #include <iostream>
 #include <iomanip>
 
+#define _DEBUG 0
+
 namespace util {
     void logger::log(logger::type type, std::string const &msg) {
+#if (_DEBUG )
         auto type_as_string = [type]() -> std::string {
             switch (type) {
                 case logger::type::DEBUG:
@@ -36,5 +39,6 @@ namespace util {
         } else {
             std::cout << formatted_msg << '\n';
         }
+#endif
     }
 }
