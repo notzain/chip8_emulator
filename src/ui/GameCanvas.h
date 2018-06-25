@@ -18,7 +18,7 @@ namespace ui {
         core::chip8 &_chip8;
         int _resolution;
 
-        sf::RectangleShape _pixels[64][32]{};
+        sf::RectangleShape _pixels[64][32];
     public:
         GameCanvas(core::chip8 &chip8, const int pos_x, const int pos_y, const int resolution);
 

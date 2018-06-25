@@ -9,7 +9,7 @@
 #include <iostream>
 #include <iomanip>
 
-#define _DEBUG 0
+#define _DEBUG 1
 
 namespace util {
     void logger::log(logger::type type, std::string const &msg) {

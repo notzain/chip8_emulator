@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
         if (argc > 1) {
             return argv[1];
         }
-        return "/home/zain/CLionProjects/chip8_emulator/chip8_roms/TETRIS";
+        return "/home/zain/CLionProjects/chip8_emulator/roms/TETRIS";
     }();
 
     core::chip8 chip8;

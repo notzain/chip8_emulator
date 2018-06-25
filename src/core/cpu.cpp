@@ -414,15 +414,29 @@ namespace core {
             case 0x000A: {
                 uint8_t const v_idx = (opcode & 0x0F00) >> 8;
 
+                util::logger::log(util::logger::type::DEBUG, fmt::format("Waiting for key press"));
+
                 bool is_key_pressed = false;
                 uint8_t key;
 
-                while (!is_key_pressed) {
-                    for (key = 0; key < 16 && !is_key_pressed; ++key) {
-                        is_key_pressed = _keypad.is_pressed(key);
-                        _keypad.press(key, false);
-                    }
+                for (key = 0; key < 16 && !is_key_pressed; ++key) {
+                    is_key_pressed = _keypad.is_pressed(key);
                 }
+
+                /*
+                * If no key has been pressed, return from function
+                * This makes sure that the program counter is not forwarded
+                * And this function will run in the next iteration as well
+                *
+                * Do not run in an infinite while loop, else other parts of the emulator will block as well.
+                */
+
+                if (!is_key_pressed) {
+                    return;
+                }
+
+                _keypad.press(key, false);
+
                 _v_reg[v_idx] = key;
 
                 _pc_reg += 2;
