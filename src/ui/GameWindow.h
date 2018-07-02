@@ -5,7 +5,7 @@
 #ifndef CHIP8_GAMEWINDOW_H
 #define CHIP8_GAMEWINDOW_H
 
-#include "ICanvas.h"
+#include "ui/canvas/ICanvas.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include <string>

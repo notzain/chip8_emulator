@@ -1,8 +1,11 @@
 set(UI_FILES
         GameWindow.h
         GameWindow.cpp
-        ICanvas.h
-        GameCanvas.cpp GameCanvas.h KeypadCanvas.cpp KeypadCanvas.h)
+        canvas/ICanvas.h
+        canvas/GameCanvas.cpp
+        canvas/GameCanvas.h
+        canvas/KeypadCanvas.cpp
+        canvas/KeypadCanvas.h)
 
 add_library(ui ${UI_FILES})
 

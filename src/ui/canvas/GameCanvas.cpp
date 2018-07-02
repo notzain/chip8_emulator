@@ -11,10 +11,12 @@ namespace ui {
     GameCanvas::GameCanvas(core::chip8 &chip8, const int pos_x, const int pos_y, const int resolution)
             : _chip8(chip8), ICanvas(pos_x, pos_y, 64, 32), _resolution(resolution) {
 
+        auto const f_resolution = static_cast<float>(_resolution);
+
         for (int x = 0; x < 64; ++x) {
             for (int y = 0; y < 32; ++y) {
                 auto &pixel = _pixels[x][y];
-                pixel.setSize({_resolution, _resolution});
+                pixel.setSize({f_resolution, f_resolution});
                 pixel.setPosition((x * _resolution) + (start_x() * _resolution),
                                   (y * _resolution) + (start_y() * _resolution));
             }

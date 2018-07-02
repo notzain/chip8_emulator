@@ -3,8 +3,8 @@
 //
 #include "GameWindow.h"
 
-#include "GameCanvas.h"
-#include "KeypadCanvas.h"
+#include "ui/canvas/GameCanvas.h"
+#include "ui/canvas/KeypadCanvas.h"
 
 #include "core/chip8.h"
 

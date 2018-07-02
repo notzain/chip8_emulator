@@ -22,7 +22,7 @@ namespace ui {
 
         int const div_size = (32 * _resolution) / 4;
         int const pad_size = 2;
-        int const actual_size = div_size - pad_size;
+        auto const actual_size = static_cast<float>(div_size - pad_size);
 
         for (int row = 0; row < 4; ++row) {
             for (int column = 0; column < 4; ++column) {
