@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fmt/format.h>
+#include <fmt/printf.h>
 #include "debugger.h"
 
 #include "core/chip8.h"
@@ -33,6 +35,16 @@ namespace dbg {
 
         if (message == "exit") {
             disable();
+        } else if (message == "instr") {
+            for (auto &instr : core::cpu::instruction_set) {
+                fmt::printf("{} : {}\n", instr.second.name, instr.second.description);
+            }
+        } else if (message == "print v") {
+            const auto &v_reg = _chip8.registers().v_reg;
+
+            for (int i = 0; i < v_reg.size(); ++i) {
+                fmt::printf("V[{}] : {}\n", i, v_reg[i]);
+            }
         }
     }
 }

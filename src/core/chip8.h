@@ -29,6 +29,8 @@ namespace core {
 
         void press_key(uint8_t const key);
 
+        const core::cpu_registers& registers() const { return _cpu.registers(); }
+
         bool to_draw() const;
 
         void has_drawn();

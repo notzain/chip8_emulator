@@ -10,9 +10,34 @@
 #include "keypad.h"
 
 #include <array>
-#include <map>
+#include <unordered_map>
 
 namespace core {
+
+    struct cpu_registers {
+        /*
+         * Chip8 has 15 general purpose cpu_registers: V0, V1 .. VE (15)
+         * VF (16) is used for the 'carry flag'.
+         * When this flag is set, it indicates that a sum of 2 cpu_registers exceeds 255.
+         */
+        std::array<uint8_t, 16> v_reg{};
+
+        std::array<uint16_t, 16> stack{};
+        uint8_t stack_idx{0};
+
+        /*
+         * The I register stores one memory address.
+         */
+        uint16_t i_reg{0};
+
+        /*
+         * The program counter register holds the address of the next opcode to fetch and execute.
+         */
+        uint16_t pc_reg = 0x200;
+
+        uint8_t delay_timer{0};
+        uint8_t sound_timer{0};
+    };
 
     class cpu {
     private:
@@ -20,33 +45,10 @@ namespace core {
         gfx &_gfx;
         keypad &_keypad;
 
-        /*
-         * Chip8 has 15 general purpose registers: V0, V1 .. VE (15)
-         * VF (16) is used for the 'carry flag'.
-         * When this flag is set, it indicates that a sum of 2 registers exceeds 255.
-         */
-        std::array<uint8_t, 16> _v_reg{};
-
-        std::array<uint16_t, 16> _stack{};
-        uint8_t _stack_idx{0};
-
-        /*
-         * The I register stores one memory address.
-         */
-        uint16_t _i_reg{0};
-
-        /*
-         * The program counter register holds the address of the next opcode to fetch and execute.
-         */
-        uint16_t _pc_reg = 0x200;
-
-        uint8_t _delay_timer{0};
-        uint8_t _sound_timer{0};
+        cpu_registers _registers;
 
         bool _should_draw = true;
 
-        using opcode_func = void (cpu::*)(uint16_t const);
-        static const std::map<uint16_t, opcode_func> _instruction_set;
 
         void op_0(uint16_t const opcode);
 
@@ -81,9 +83,21 @@ namespace core {
         void op_F(uint16_t const opcode);
 
     public:
+        using opcode_func = void (cpu::*)(uint16_t const);
+
+        struct cpu_instruction {
+            std::string name;
+            std::string description;
+            opcode_func func;
+        };
+
+        static const std::unordered_map<uint16_t, cpu_instruction> instruction_set;
+
         cpu(ram &ram, gfx &gfx, keypad &keypad);
 
-        inline uint16_t prog_counter() const { return _pc_reg; }
+        inline uint16_t prog_counter() const { return _registers.pc_reg; }
+
+        inline const cpu_registers& registers() const { return _registers; }
 
         inline bool to_draw() const { return _should_draw; }
 
