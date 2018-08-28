@@ -66,6 +66,6 @@ namespace ui {
             }
         }
 
-        to_press = mouse_pressed;
+        last_pressed = mouse_pressed;
     }
 }

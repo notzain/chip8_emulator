@@ -45,8 +45,10 @@ namespace core {
         if (instr != instruction_set.cend()) {
             (this->*(instr->second).func)(opcode);
         } else {
-            util::logger::log(util::logger::type::ERROR,
-                              fmt::format("Invalid hex code: opcode {:#x} | opmask {:#x}", opcode, opmask));
+            util::logger::log(
+                util::logger::type::ERROR,
+                fmt::format("Invalid hex code: opcode {:#x} | opmask {:#x}", opcode, opmask)
+            );
         }
 
         if (_registers.delay_timer > 0) --_registers.delay_timer;
@@ -57,7 +59,6 @@ namespace core {
 
         // 00E0	Clear the screen
         if (opcode == 0x00E0) {
-//        fmt::print("Clear screen. \n");
             _gfx.clear();
             _should_draw = true;
             _registers.pc_reg += 2;

@@ -1,12 +1,13 @@
 #include "core/chip8.h"
+#include "dbg/debugger.h"
 #include "ui/GameWindow.h"
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <thread>
-#include <dbg/debugger.h>
 #include <SFML/Window/Keyboard.hpp>
+#include <chrono>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <thread>
 
 std::vector<std::string> split(const std::string &str, char delimiter) {
     std::vector<std::string> tokens;
@@ -16,7 +17,7 @@ std::vector<std::string> split(const std::string &str, char delimiter) {
     while (std::getline(tokenStream, token, delimiter)) {
         tokens.push_back(token);
     }
-    return std::move(tokens);
+    return tokens;
 }
 
 int main(int argc, char **argv) {
@@ -24,9 +25,8 @@ int main(int argc, char **argv) {
         if (argc > 1) {
             return argv[1];
         }
-        return "/home/zain/CLionProjects/chip8_emulator/roms/TETRIS";
+        return "../../roms/TETRIS";
     }();
-
 
     core::chip8 chip8;
 
@@ -49,9 +49,7 @@ int main(int argc, char **argv) {
             if (dbg.enabled()) dbg.disable();
             else               dbg.enable();
 
-            // Wow... garbage sleep
-            volatile int i;
-            for (i = INT32_MAX/4; i != 0; --i);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 }
